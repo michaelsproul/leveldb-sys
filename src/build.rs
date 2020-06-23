@@ -11,12 +11,15 @@ const LEVELDB_VERSION: &'static str = "1.22";
 fn build_snappy() -> PathBuf {
     println!("[snappy] Building");
 
+    let outdir = env::var("OUT_DIR").unwrap();
+
     env::set_var("NUM_JOBS", num_cpus::get().to_string());
     let dest_prefix =
         cmake::Config::new(Path::new("deps").join(format!("snappy-{}", SNAPPY_VERSION)))
             .define("BUILD_SHARED_LIBS", "OFF")
             .define("SNAPPY_BUILD_TESTS", "OFF")
             .define("HAVE_LIBZ", "OFF")
+            .define("CMAKE_INSTALL_LIBDIR", Path::new(&outdir).join("lib"))
             .build();
 
     println!(
@@ -31,12 +34,15 @@ fn build_snappy() -> PathBuf {
 fn build_leveldb(snappy_prefix: Option<PathBuf>) {
     println!("[leveldb] Building");
 
+    let outdir = env::var("OUT_DIR").unwrap();
+
     env::set_var("NUM_JOBS", num_cpus::get().to_string());
     let mut config =
         cmake::Config::new(Path::new("deps").join(format!("leveldb-{}", LEVELDB_VERSION)));
     config
         .define("LEVELDB_BUILD_TESTS", "OFF")
-        .define("LEVELDB_BUILD_BENCHMARKS", "OFF");
+        .define("LEVELDB_BUILD_BENCHMARKS", "OFF")
+        .define("CMAKE_INSTALL_LIBDIR", Path::new(&outdir).join("lib"));
     if let Some(snappy_prefix) = snappy_prefix {
         env::set_var(
             "LDFLAGS",
